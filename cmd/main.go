@@ -3,6 +3,7 @@ package main
 import (
 	"fmt"
 	"log"
+	"time"
 
 	"api-gateway/internal/middlewares"
 
@@ -16,9 +17,13 @@ func main() {
 	// Public route
 	r.GET("/health", middlewares.HealthCheckHandler)
 
-	// Protected routes (require JWT)
+	// Create a global rate limiter
+	rateLimiter := middlewares.NewRateLimiter(5, time.Second) // 5 requests per second
+
+	// Protected routes (require JWT) with rate limiting
 	authorized := r.Group("/")
 	authorized.Use(middlewares.JWTAuthMiddleware())
+	authorized.Use(middlewares.RateLimitMiddleware(rateLimiter))
 	{
 		authorized.GET("/secure", func(c *gin.Context) {
 			userID, _ := c.Get("userID") // Retrieve userID from context

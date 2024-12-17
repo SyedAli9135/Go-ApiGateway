@@ -1,33 +1,26 @@
 package main
 
 import (
-	"net/http"
-	"time"
-
+	// Import the common package where RouteConfigWrapper is defined
 	"api-gateway/internal/middlewares"
+	"api-gateway/internal/routes"
 
 	"github.com/gin-gonic/gin"
 )
 
+// main initializes the API Gateway application, registers route handlers, and starts the server.
 func main() {
-	// Create a Gin router
+	// Initialize the Gin engine
 	r := gin.Default()
 
-	// Define routes configuration
-	routesConfig := middlewares.RoutesConfig{
-		Routes: map[string]string{
-			"/users": "http://localhost:8081", // Map /users to backend server on port 8081
-		},
-	}
+	// Create a new RouteConfigWrapper instance
+	routeConfigWrapper := routes.NewRoutesConfig()
 
-	// Apply Middlewares
-	r.Use(middlewares.RateLimitMiddleware(middlewares.NewRateLimiter(5, time.Second)))
-	r.Use(middlewares.ServiceRoutingMiddleware(routesConfig))
+	// Register route management endpoints (e.g., /register, /unregister, /routes)
+	routes.RegisterRouteHandlers(r, routeConfigWrapper)
 
-	// Health check route for API Gateway
-	r.GET("/health", func(c *gin.Context) {
-		c.JSON(http.StatusOK, gin.H{"message": "API Gateway is running"})
-	})
+	// Pass the RoutesConfig from the RouteConfigWrapper to the ServiceRoutingMiddleware
+	r.Use(middlewares.ServiceRoutingMiddleware(*routeConfigWrapper.RoutesConfig)) // Pass the actual RoutesConfig
 
 	// Start the API Gateway on port 8080
 	r.Run(":8080")

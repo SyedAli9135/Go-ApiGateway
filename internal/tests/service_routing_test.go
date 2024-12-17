@@ -5,6 +5,7 @@ import (
 	"net/http/httptest"
 	"testing"
 
+	"api-gateway/internal/common"
 	"api-gateway/internal/middlewares"
 
 	"github.com/gin-gonic/gin"
@@ -46,7 +47,7 @@ func TestServiceRoutingMiddleware(t *testing.T) {
 
 	// Step 2: Set up RoutesConfig with the mock server URL
 	// Update RoutesConfig to map the "/test" path to the mock server URL
-	routesConfig := middlewares.RoutesConfig{
+	routesConfig := common.RoutesConfig{
 		Routes: map[string]string{
 			"/test": mockServerURL, // Map "/test" to the mock server URL
 		},

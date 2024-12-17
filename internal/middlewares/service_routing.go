@@ -5,16 +5,13 @@ import (
 	"net/http/httputil"
 	"net/url"
 
+	"api-gateway/internal/common"
+
 	"github.com/gin-gonic/gin"
 )
 
-// RoutesConfig holds the mapping of routes to their target services
-type RoutesConfig struct {
-	Routes map[string]string
-}
-
 // ServiceRoutingMiddleware forwards requests to appropriate services based on the path
-func ServiceRoutingMiddleware(routes RoutesConfig) gin.HandlerFunc {
+func ServiceRoutingMiddleware(routes common.RoutesConfig) gin.HandlerFunc {
 	return func(c *gin.Context) {
 		// Check if the incoming path matches any configured route
 		target, ok := routes.Routes[c.Request.URL.Path]

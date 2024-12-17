@@ -1,9 +1,11 @@
-package middlewares
+package tests
 
 import (
 	"net/http"
 	"net/http/httptest"
 	"testing"
+
+	"api-gateway/internal/middlewares"
 
 	"github.com/gin-gonic/gin"
 )
@@ -12,14 +14,14 @@ func TestJwtAuthMiddleware(t *testing.T) {
 	gin.SetMode(gin.TestMode)
 
 	// Create a valid token
-	token, err := GenerateJWT("user123")
+	token, err := middlewares.GenerateJWT("user123")
 	if err != nil {
 		t.Fatalf("Failed to generate JWT: %v", err)
 	}
 
 	// Set up a Gin router with the JWT middleware
 	r := gin.Default()
-	r.Use(JWTAuthMiddleware())
+	r.Use(middlewares.JWTAuthMiddleware())
 	r.GET("/secure", func(c *gin.Context) {
 		userID, _ := c.Get("userID")
 		c.JSON(200, gin.H{"message": "Secure route", "userID": userID})

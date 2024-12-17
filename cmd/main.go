@@ -1,8 +1,7 @@
 package main
 
 import (
-	"fmt"
-	"log"
+	"net/http"
 	"time"
 
 	"api-gateway/internal/middlewares"
@@ -11,30 +10,25 @@ import (
 )
 
 func main() {
-	// Create a gin router
+	// Create a Gin router
 	r := gin.Default()
 
-	// Public route
-	r.GET("/health", middlewares.HealthCheckHandler)
-
-	// Create a global rate limiter
-	rateLimiter := middlewares.NewRateLimiter(5, time.Second) // 5 requests per second
-
-	// Protected routes (require JWT) with rate limiting
-	authorized := r.Group("/")
-	authorized.Use(middlewares.JWTAuthMiddleware())
-	authorized.Use(middlewares.RateLimitMiddleware(rateLimiter))
-	{
-		authorized.GET("/secure", func(c *gin.Context) {
-			userID, _ := c.Get("userID") // Retrieve userID from context
-			c.JSON(200, gin.H{"message": "Secure route accessed",
-				"userID": userID})
-		})
+	// Define routes configuration
+	routesConfig := middlewares.RoutesConfig{
+		Routes: map[string]string{
+			"/users": "http://localhost:8081", // Map /users to backend server on port 8081
+		},
 	}
 
-	// Start the server on port 8080
-	fmt.Println("Starting server on :8080")
-	if err := r.Run(":8080"); err != nil {
-		log.Fatal("Failed to start server:", err)
-	}
+	// Apply Middlewares
+	r.Use(middlewares.RateLimitMiddleware(middlewares.NewRateLimiter(5, time.Second)))
+	r.Use(middlewares.ServiceRoutingMiddleware(routesConfig))
+
+	// Health check route for API Gateway
+	r.GET("/health", func(c *gin.Context) {
+		c.JSON(http.StatusOK, gin.H{"message": "API Gateway is running"})
+	})
+
+	// Start the API Gateway on port 8080
+	r.Run(":8080")
 }

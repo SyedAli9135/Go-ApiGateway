@@ -1,10 +1,12 @@
-package middlewares
+package tests
 
 import (
 	"net/http"
 	"net/http/httptest"
 	"testing"
 	"time"
+
+	"api-gateway/internal/middlewares"
 
 	"github.com/gin-gonic/gin"
 )
@@ -13,11 +15,11 @@ func TestRateLimiter(t *testing.T) {
 	gin.SetMode(gin.TestMode)
 
 	// Create a rate limiter allowing 2 requests per second
-	limiter := NewRateLimiter(2, time.Second)
+	limiter := middlewares.NewRateLimiter(2, time.Second)
 
 	// Set up a Gin router with the rate-limiting middleware
 	r := gin.Default()
-	r.Use(RateLimitMiddleware(limiter))
+	r.Use(middlewares.RateLimitMiddleware(limiter))
 	r.GET("/test", func(c *gin.Context) {
 		c.JSON(200, gin.H{"message": "OK"})
 	})

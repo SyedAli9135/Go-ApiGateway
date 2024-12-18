@@ -1,27 +1,34 @@
 package main
 
 import (
-	// Import the common package where RouteConfigWrapper is defined
 	"api-gateway/internal/middlewares"
-	"api-gateway/internal/routes"
+	"log"
 
 	"github.com/gin-gonic/gin"
+	"github.com/hashicorp/consul/api"
 )
 
-// main initializes the API Gateway application, registers route handlers, and starts the server.
 func main() {
-	// Initialize the Gin engine
+	// Step 1: Initialize Consul client
+	consulConfig := &api.Config{
+		Address: "localhost:8500",
+	}
+	consulClient, err := api.NewClient(consulConfig)
+	if err != nil {
+		log.Fatalf("Failed to create Consul client: %v", err)
+	}
+
+	// Step 2: Initialize Gin router
 	r := gin.Default()
 
-	// Create a new RouteConfigWrapper instance
-	routeConfigWrapper := routes.NewRoutesConfig()
+	// Step 3: Register the ServiceRoutingMiddleware with the Consul client
+	r.Use(middlewares.ServiceRoutingWithConsulSupportMiddleware(consulClient))
 
-	// Register route management endpoints (e.g., /register, /unregister, /routes)
-	routes.RegisterRouteHandlers(r, routeConfigWrapper)
+	// Step 4: Set up a simple health check endpoint
+	r.GET("/ping", func(c *gin.Context) {
+		c.JSON(200, gin.H{"message": "pong"})
+	})
 
-	// Pass the RoutesConfig from the RouteConfigWrapper to the ServiceRoutingMiddleware
-	r.Use(middlewares.ServiceRoutingMiddleware(*routeConfigWrapper.RoutesConfig)) // Pass the actual RoutesConfig
-
-	// Start the API Gateway on port 8080
+	// Step 5: Start the server
 	r.Run(":8080")
 }
